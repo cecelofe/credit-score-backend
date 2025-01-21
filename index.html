@@ -1,0 +1,878 @@
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análise Financeira</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="pdf.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-gauge@0.3.0/dist/chartjs-gauge.min.js"></script>
+  <script src="charts.js"></script>
+  <script src="table.js"></script>
+  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css">
+</head>
+<body>
+  <div class="container my-4">
+    <h1 class="text-center text-primary mb-4">Análise Financeira Completa</h1>
+
+    <!-- Resumo Credit Score -->
+    <section id="credit-score" class="mb-5">
+      <h2 class="text-secondary mb-3">1- Resumo Credit Score</h2>
+      <div class="row g-4">
+        <!-- Card 1 - Credit Score Gauge -->
+        <div class="col-md-3">
+          <div class="card h-100">
+            <div class="card-body d-flex flex-column justify-content-between">
+              <h5 class="text-center mb-3">Credit Score</h5>
+              <div id="gauge-chart" class="chart-container"></div>
+              <p class="text-muted text-center mt-3 mb-0">A projeção de fluxo de caixa não pressiona a capacidade de pagamento.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 - Limite de Endividamento -->
+        <div class="col-md-3">
+          <div class="card h-100">
+            <div class="card-body d-flex flex-column justify-content-between">
+              <h5 class="text-center mb-4">Limite de Endividamento</h5>
+              <ul class="list-unstyled mb-0">
+                <li class="mb-3">
+                  <div class="debt-limit-value">
+                    <span>Teto Máximo:</span>
+                    <div class="divider"></div>
+                    <span class="limit-value">R$ 144</span>
+                    <span class="limit-unit">M</span>
+                  </div>
+                </li>
+                <li class="mb-3">
+                  <div class="d-flex justify-content-between">
+                    <span>Nova Proposta:</span>
+                    <strong>R$ 60 M</strong>
+                  </div>
+                </li>
+                <li>
+                  <div class="d-flex justify-content-between">
+                    <span>Endividamento Atual:</span>
+                    <strong>R$ 20 M</strong>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 - Evolução da Margem -->
+        <div class="col-md-3">
+          <div class="card h-100">
+            <div class="card-body d-flex flex-column justify-content-between">
+              <h5 class="text-center mb-3">Evolução da Margem de Endividamento</h5>
+              <div id="margin-chart" class="chart-container"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 - Indicadores -->
+        <div class="col-md-3">
+          <div class="card h-100">
+            <div class="card-body d-flex flex-column justify-content-between">
+              <h5 class="text-center mb-3">Indicadores</h5>
+              <div id="indicators-chart" class="chart-container"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Detalhamento da Capacidade de Pagamento -->
+    <section id="payment-details" class="mb-5">
+      <h2 class="text-secondary mb-3">2- Detalhamento da Capacidade de Pagamento</h2>
+      <div class="card p-3">
+        <div class="table-responsive">
+          <table class="table table-bordered" id="financialTable">
+            <!-- Table headers -->
+            <thead>
+              <tr>
+                <th>Valores em R$ 1.000</th>
+                <th colspan="3" class="text-center">Valores Realizados</th>
+                <th colspan="5" class="vertical-line text-center">Valores Projetados - Curto Prazo</th>
+                <th colspan="5" class="text-center">Valores Projetados - Longo Prazo</th>
+              </tr>
+              <tr>
+                <th></th>
+                <th>2021</th>
+                <th>2022</th>
+                <th>2023</th>
+                <th class="vertical-line">1</th>
+                <th>2</th>
+                <th>3</th>
+                <th>4</th>
+                <th>5</th>
+                <th>6</th>
+                <th>7</th>
+                <th>8</th>
+                <th>9</th>
+                <th>10</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <!-- Table content will be populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nova seção -->
+    <section id="financial-projections" class="mb-5">
+      <h2 class="text-secondary mb-3">3- Evolução Gráfica dos Principais Componentes das Projeções Financeiras</h2>
+      <div class="row g-4">
+        <!-- Card 1 -->
+        <div class="col">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title text-center mb-3">Vendas - ROL</h5>
+              <div class="chart-container">
+                <canvas id="revenue-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="col">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title text-center mb-3">Ebit</h5>
+              <div class="chart-container">
+                <canvas id="ebit-margin-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="col">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title text-center mb-3">% Custos S/Vendas</h5>
+              <div class="chart-container">
+                <canvas id="cash-flow-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="col">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title text-center mb-3">% Despesas Operacionais S/Vendas</h5>
+              <div class="chart-container">
+                <canvas id="debt-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="col">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title text-center mb-3">Índice de Cobertura do Serviço da Dívida - ICSD</h5>
+              <div class="chart-container">
+                <canvas id="roe-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nova seção TIR -->
+    <section id="tir-section" class="mb-5">
+      <h2 class="text-secondary mb-3">4- Taxa Interna de Retorno - TIR</h2>
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0">Taxa Interna de Retorno - TIR:</h5>
+                <h4 class="text-primary mb-0">31.6%</h4>
+              </div>
+              <div class="progress mb-3" style="height: 20px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: 75%;" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <p class="text-muted">Taxa mínima de atratividade: 12%</p>
+            </div>
+            <div class="col-md-6">
+              <div class="chart-container">
+                <canvas id="tir-chart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="table-responsive mt-4">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Início</th>
+                  <th>Ano 1</th>
+                  <th>Ano 2</th>
+                  <th>Ano 3</th>
+                  <th>Ano 4</th>
+                  <th>Ano 5</th>
+                  <th>Ano 6</th>
+                  <th>Ano 7</th>
+                  <th>Ano 8</th>
+                  <th>Ano 9</th>
+                  <th>Ano 10</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Novo Empréstimo</td>
+                  <td class="text-danger">-60,000</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                </tr>
+                <tr>
+                  <td>Saldo do Fluxo de Caixa após as Despesas Financeiras</td>
+                  <td>-</td>
+                  <td>12,892</td>
+                  <td>16,373</td>
+                  <td>19,111</td>
+                  <td>21,598</td>
+                  <td>25,059</td>
+                  <td>29,750</td>
+                  <td>30,884</td>
+                  <td>32,037</td>
+                  <td>33,211</td>
+                  <td>34,405</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nova seção VPL -->
+    <section id="vpl-section" class="mb-5">
+      <h2 class="text-secondary mb-3">5- Valor Presente Líquido - VPL</h2>
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0">Custo do Capital (Novo Empréstimo):</h5>
+                <h4 class="text-primary mb-0">7.0%</h4>
+              </div>
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0">Valor Presente Líquido - VPL:</h5>
+                <h4 class="text-primary mb-0">R$ 102,384</h4>
+              </div>
+              <div class="progress mb-3" style="height: 20px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: 85%;" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="chart-container">
+                <canvas id="vpl-chart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="table-responsive mt-4">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Início</th>
+                  <th>Ano 1</th>
+                  <th>Ano 2</th>
+                  <th>Ano 3</th>
+                  <th>Ano 4</th>
+                  <th>Ano 5</th>
+                  <th>Ano 6</th>
+                  <th>Ano 7</th>
+                  <th>Ano 8</th>
+                  <th>Ano 9</th>
+                  <th>Ano 10</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Novo Empréstimo</td>
+                  <td class="text-danger">-60,000</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                </tr>
+                <tr>
+                  <td>Saldo do Fluxo de Caixa após as Despesas Financeiras</td>
+                  <td>-</td>
+                  <td>12,892</td>
+                  <td>16,373</td>
+                  <td>19,111</td>
+                  <td>21,598</td>
+                  <td>25,059</td>
+                  <td>29,750</td>
+                  <td>30,884</td>
+                  <td>32,037</td>
+                  <td>33,211</td>
+                  <td>34,405</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nova seção Payback -->
+    <section id="payback-section" class="mb-5">
+      <h2 class="text-secondary mb-3">6- Payback</h2>
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0">Payback:</h5>
+                <h4 class="text-primary mb-0">3.5 Anos</h4>
+              </div>
+              <div class="progress mb-3" style="height: 20px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: 35%;" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="chart-container">
+                <canvas id="payback-chart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="table-responsive mt-4">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Início</th>
+                  <th>Ano 1</th>
+                  <th>Ano 2</th>
+                  <th>Ano 3</th>
+                  <th>Ano 4</th>
+                  <th>Ano 5</th>
+                  <th>Ano 6</th>
+                  <th>Ano 7</th>
+                  <th>Ano 8</th>
+                  <th>Ano 9</th>
+                  <th>Ano 10</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Novo Empréstimo</td>
+                  <td class="text-danger">-60,000</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                </tr>
+                <tr>
+                  <td>Saldo do Fluxo de Caixa após as Despesas Financeiras</td>
+                  <td>-</td>
+                  <td>12,892</td>
+                  <td>16,373</td>
+                  <td>19,111</td>
+                  <td>21,598</td>
+                  <td>25,059</td>
+                  <td>29,750</td>
+                  <td>30,884</td>
+                  <td>32,037</td>
+                  <td>33,211</td>
+                  <td>34,405</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nova seção Endividamento Bancário -->
+    <section id="debt-details" class="mb-5">
+      <h2 class="text-secondary mb-3">7- Detalhamento do Endividamento Bancário</h2>
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-4 mb-4">
+            <!-- Endividamento Atual -->
+            <div class="col-md-4">
+              <div class="card h-100">
+                <div class="card-header bg-light-gray">
+                  <h5 class="mb-0">7.1 Endividamento Atual - Fluxo de Amortização</h5>
+                </div>
+                <div class="card-body">
+                  <div class="d-flex justify-content-between mb-2">
+                    <strong>Total do Endividamento Atual</strong>
+                    <span>R$ 19,773</span>
+                  </div>
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Endividamento de Curto Prazo</span>
+                    <span>R$ 12,511</span>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <span>Endividamento de Longo Prazo</span>
+                    <span>R$ 7,262</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Novo Empréstimo -->
+            <div class="col-md-4">
+              <div class="card h-100">
+                <div class="card-header bg-light-gray">
+                  <h5 class="mb-0">7.2 Novo Empréstimo - Proposta</h5>
+                </div>
+                <div class="card-body">
+                  <div class="d-flex justify-content-between mb-2">
+                    <strong>Valor do Novo Empréstimo</strong>
+                    <span>R$ 60,000</span>
+                  </div>
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Taxa de Juros (% Ano)</span>
+                    <span>7.0%</span>
+                  </div>
+                  <div class="d-flex justify-content-between mb-2">
+                    <span>Prazo de Amortização (Anos)</span>
+                    <span>8</span>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <span>Prazo de Carência (Anos)</span>
+                    <span>2</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fluxo Total -->
+            <div class="col-md-4">
+              <div class="card h-100">
+                <div class="card-header bg-light-gray">
+                  <h5 class="mb-0">7.3 Fluxo Total de Amortização dos Empréstimos</h5>
+                </div>
+                <div class="card-body">
+                  <div class="d-flex justify-content-between mb-2">
+                    <strong>Somatório do Endividamento</strong>
+                    <span>R$ 79,773</span>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <span>Taxa de Juros Estimada</span>
+                    <span>14.0%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabelas de Amortização -->
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th colspan="4" class="text-center">Endividamento Atual</th>
+                  <th colspan="4" class="text-center">Novo Empréstimo</th>
+                  <th colspan="4" class="text-center">Fluxo Total</th>
+                </tr>
+                <tr>
+                  <th>Ano</th>
+                  <th>Principal</th>
+                  <th>Juros</th>
+                  <th>Saldo</th>
+                  <th>Principal</th>
+                  <th>Juros</th>
+                  <th>PMT</th>
+                  <th>Saldo</th>
+                  <th>Principal</th>
+                  <th>Juros</th>
+                  <th>PMT</th>
+                  <th>Saldo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>12,511</td>
+                  <td>2,768</td>
+                  <td>7,262</td>
+                  <td>0</td>
+                  <td>4,200</td>
+                  <td>4,200</td>
+                  <td>60,000</td>
+                  <td>12,511</td>
+                  <td>6,968</td>
+                  <td>19,479</td>
+                  <td>67,262</td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>2,421</td>
+                  <td>1,017</td>
+                  <td>4,841</td>
+                  <td>0</td>
+                  <td>4,200</td>
+                  <td>4,200</td>
+                  <td>60,000</td>
+                  <td>2,421</td>
+                  <td>5,217</td>
+                  <td>7,637</td>
+                  <td>64,841</td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>2,421</td>
+                  <td>678</td>
+                  <td>2,421</td>
+                  <td>7,500</td>
+                  <td>4,200</td>
+                  <td>11,700</td>
+                  <td>52,500</td>
+                  <td>9,921</td>
+                  <td>4,878</td>
+                  <td>14,798</td>
+                  <td>54,921</td>
+                </tr>
+                <tr>
+                  <td>4</td>
+                  <td>2,421</td>
+                  <td>339</td>
+                  <td>0</td>
+                  <td>7,500</td>
+                  <td>3,675</td>
+                  <td>11,175</td>
+                  <td>45,000</td>
+                  <td>9,921</td>
+                  <td>4,014</td>
+                  <td>13,935</td>
+                  <td>45,000</td>
+                </tr>
+                <tr>
+                  <td>5</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>7,500</td>
+                  <td>3,150</td>
+                  <td>10,650</td>
+                  <td>37,500</td>
+                  <td>7,500</td>
+                  <td>3,150</td>
+                  <td>10,650</td>
+                  <td>37,500</td>
+                </tr>
+                <tr>
+                  <td>6</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>7,500</td>
+                  <td>2,625</td>
+                  <td>10,125</td>
+                  <td>30,000</td>
+                  <td>7,500</td>
+                  <td>2,625</td>
+                  <td>10,125</td>
+                  <td>30,000</td>
+                </tr>
+                <tr>
+                  <td>7</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>7,500</td>
+                  <td>2,100</td>
+                  <td>9,600</td>
+                  <td>22,500</td>
+                  <td>7,500</td>
+                  <td>2,100</td>
+                  <td>9,600</td>
+                  <td>22,500</td>
+                </tr>
+                <tr>
+                  <td>8</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>7,500</td>
+                  <td>1,575</td>
+                  <td>9,075</td>
+                  <td>15,000</td>
+                  <td>7,500</td>
+                  <td>1,575</td>
+                  <td>9,075</td>
+                  <td>15,000</td>
+                </tr>
+                <tr>
+                  <td>9</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>7,500</td>
+                  <td>1,050</td>
+                  <td>8,550</td>
+                  <td>7,500</td>
+                  <td>7,500</td>
+                  <td>1,050</td>
+                  <td>8,550</td>
+                  <td>7,500</td>
+                </tr>
+                <tr>
+                  <td>10</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>7,500</td>
+                  <td>525</td>
+                  <td>8,025</td>
+                  <td>0</td>
+                  <td>7,500</td>
+                  <td>525</td>
+                  <td>8,025</td>
+                  <td>0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nova seção ICSD -->
+    <section id="icsd-section" class="mb-5">
+      <h2 class="text-secondary mb-3">8- Índice de Cobertura do Serviço da Dívida - ICSD</h2>
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0">Média ICSD:</h5>
+                <h4 class="text-primary mb-0">4.78</h4>
+              </div>
+              <div class="progress mb-3" style="height: 20px;">
+                <div class="progress-bar bg-primary" role="progressbar" style="width: 85%;" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="chart-container">
+                <canvas id="icsd-chart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="table-responsive mt-4">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Indicadores</th>
+                  <th>Ano 1</th>
+                  <th>Ano 2</th>
+                  <th>Ano 3</th>
+                  <th>Ano 4</th>
+                  <th>Ano 5</th>
+                  <th>Ano 6</th>
+                  <th>Ano 7</th>
+                  <th>Ano 8</th>
+                  <th>Ano 9</th>
+                  <th>Ano 10</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Ebit - Resultado antes dos juros e impostos</td>
+                  <td>33,495</td>
+                  <td>37,368</td>
+                  <td>41,545</td>
+                  <td>44,834</td>
+                  <td>49,620</td>
+                  <td>52,165</td>
+                  <td>53,469</td>
+                  <td>54,805</td>
+                  <td>56,176</td>
+                  <td>57,580</td>
+                </tr>
+                <tr>
+                  <td>Endividamento Bancário (Principal + Juros)</td>
+                  <td>-19,479</td>
+                  <td>-7,637</td>
+                  <td>-14,798</td>
+                  <td>-13,935</td>
+                  <td>-10,650</td>
+                  <td>-10,125</td>
+                  <td>-9,600</td>
+                  <td>-9,075</td>
+                  <td>-8,550</td>
+                  <td>-8,025</td>
+                </tr>
+                <tr class="table-primary">
+                  <td><strong>Índice de Cobertura do Serviço da Dívida - ICSD</strong></td>
+                  <td><strong>1.72</strong></td>
+                  <td><strong>4.89</strong></td>
+                  <td><strong>2.81</strong></td>
+                  <td><strong>3.22</strong></td>
+                  <td><strong>4.66</strong></td>
+                  <td><strong>5.15</strong></td>
+                  <td><strong>5.57</strong></td>
+                  <td><strong>6.04</strong></td>
+                  <td><strong>6.57</strong></td>
+                  <td><strong>7.18</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nova seção Limite de Endividamento -->
+    <section id="debt-limit-section" class="mb-5">
+      <h2 class="text-secondary mb-3">8- Estimativa do Limite de Endividamento</h2>
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-4">
+            <!-- 8.1 Limite de Endividamento -->
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header bg-light-gray">
+                  <h5 class="mb-0">8.1 Limite de Endividamento</h5>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th>Value R$</th>
+                          <th>%T</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Teto de Endividamento Máximo (a)</td>
+                          <td>144,320</td>
+                          <td>100%</td>
+                        </tr>
+                        <tr>
+                          <td>Endividamento Atual (b)</td>
+                          <td>19,773</td>
+                          <td>14%</td>
+                        </tr>
+                        <tr>
+                          <td>Potencial Adicional de Endividamento (a-b)</td>
+                          <td>124,547</td>
+                          <td>86%</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 8.2 Definição do Credit Score -->
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header bg-light-gray">
+                  <h5 class="mb-0">8.2 Definição do Credit Score</h5>
+                </div>
+                <div class="card-body">
+                  <div class="d-flex flex-column align-items-center">
+                    <h2 class="text-primary mb-3">Credit Score A</h2>
+                    <p class="text-center">
+                      A projeção de fluxo de caixa não pressiona a capacidade de pagamento.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 8.3 Endividamento Atual Vs Limite de Endividamento -->
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header bg-light-gray">
+                  <h5 class="mb-0">8.3 Endividamento Atual Vs Limite de Endividamento</h5>
+                </div>
+                <div class="card-body">
+                  <div class="chart-container mb-3">
+                    <canvas id="debt-limit-chart"></canvas>
+                  </div>
+                  <div class="text-center">
+                    <p class="mb-2">
+                      <strong>Endividamento Atual:</strong> R$ 19,773
+                    </p>
+                    <p class="mb-0">
+                      <strong>Potencial Máximo de Endividamento:</strong> R$ 144,320
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="dropdown">
+    <button class="pdf-button dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      Exportar
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+      <li><a class="dropdown-item" href="#" onclick="generatePDF()">
+        <i class="fas fa-file-pdf me-2"></i>Exportar PDF
+      </a></li>
+      <li><a class="dropdown-item" href="#" onclick="exportToExcel()">
+        <i class="fas fa-file-excel me-2"></i>Exportar Excel
+      </a></li>
+      <li><a class="dropdown-item" href="#" onclick="exportToWord()">
+        <i class="fas fa-file-word me-2"></i>Exportar Word
+      </a></li>
+      <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item" href="#" onclick="shareViaEmail()">
+        <i class="fas fa-envelope me-2"></i>Enviar por Email
+      </a></li>
+    </ul>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-gauge@0.3.0/dist/chartjs-gauge.min.js"></script>
+  <script src="charts.js"></script>
+  <script src="table.js"></script>
+  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+</body>
+</html>
